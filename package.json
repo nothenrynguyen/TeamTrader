@@ -1,0 +1,14 @@
+{
+  "name": "utah-mammoth-tradebot",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+    "build": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.9",
+    "postcss": "^8.4.41",
+    "autoprefixer": "^10.4.19"
+  }
+}
