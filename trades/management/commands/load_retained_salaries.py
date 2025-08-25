@@ -1,13 +1,13 @@
 from django.core.management.base import BaseCommand
-from trades.models import DraftPick, Team
+from trades.models import RetainedSalary, Team
 import pandas as pd
 
 
 class Command(BaseCommand):
-    help = "Load draft picks from draft_picks.csv"
+    help = "Load retained salaries from retention_used.csv"
 
     def handle(self, *args, **kwargs):
-        file_path = 'trades/data/draft_picks.csv'
+        file_path = 'trades/data/retention_used.csv'
         df = pd.read_csv(file_path)
 
         count = 0
@@ -22,13 +22,11 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR(f"Team not found: {team_abbr}"))
                 continue
 
-            DraftPick.objects.create(
-                owning_team=team,
-                original_team_abbr=row.get('original_team_abbr') or None,
-                year=int(row['year']),
-                rnd=int(row['round']),
-                overall=int(row['overall']) if 'overall' in row and not pd.isna(row['overall']) else None
+            RetainedSalary.objects.create(
+                team=team,
+                season=row['season'],
+                player_name=row['player_name']
             )
             count += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Loaded {count} draft picks"))
+        self.stdout.write(self.style.SUCCESS(f"Loaded {count} retained salary entries"))

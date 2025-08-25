@@ -15,10 +15,9 @@ class Command(BaseCommand):
         self.load_retained_salaries()
 
     def load_teams(self):
-        # We’ll extract team abbreviations from the other CSVs automatically
         team_abbrs = set()
 
-        # From contracts.csv
+        # from contracts.csv
         with open(DATA_DIR / "contracts.csv", newline='', encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -27,7 +26,7 @@ class Command(BaseCommand):
                 if row.get("nhl_rights_abbrv"):
                     team_abbrs.add(row["nhl_rights_abbrv"])
 
-        # From draft_picks.csv
+        # from draft_picks.csv
         with open(DATA_DIR / "draft_picks.csv", newline='', encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -36,7 +35,7 @@ class Command(BaseCommand):
                 if row.get("original_team_abbr"):
                     team_abbrs.add(row["original_team_abbr"])
 
-        # From retention_used.csv
+        # from retention_used.csv
         with open(DATA_DIR / "retention_used.csv", newline='', encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -93,7 +92,7 @@ class Command(BaseCommand):
                 nhl_id = row.get("nhl_id") or None
                 full_name = row.get("full_name") or ""
 
-                # Upsert using whatever id we have (id + name gives us stability if id is missing)
+                # upsert using whatever id we have ( or name if id is missing - for stability)
                 obj, _ = Contract.objects.update_or_create(
                     nhl_id=nhl_id, full_name=full_name, defaults=defaults
                 )

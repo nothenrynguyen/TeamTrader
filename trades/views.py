@@ -1,11 +1,7 @@
 from django.shortcuts import render
-import pandas as pd
-import os
-from django.conf import settings
+from trades.models import Team, Contract, DraftPick, RetainedSalary
 
-BASE_DIR = settings.BASE_DIR
-
-# Full NHL team mapping
+# NHL team display mapping
 TEAMS = {
     "ANA": {"code": "ANA", "name": "Anaheim Ducks"},
     "ARI": {"code": "ARI", "name": "Arizona Coyotes"},
@@ -45,17 +41,17 @@ def index(request):
     team_a_code = request.GET.get("team_a")
     team_b_code = request.GET.get("team_b")
 
-    # Load contracts.csv from the correct path
-    contracts_path = os.path.join(BASE_DIR, "trades", "data", "contracts.csv")
-    contracts_df = pd.read_csv(contracts_path)
+    team_a = Team.objects.filter(abbr=team_a_code).first()
+    team_b = Team.objects.filter(abbr=team_b_code).first()
 
-    # Filter player data by team
-    team_a_players = contracts_df[contracts_df["nhl_rights_abbrv"] == team_a_code].to_dict("records") if team_a_code else []
-    team_b_players = contracts_df[contracts_df["nhl_rights_abbrv"] == team_b_code].to_dict("records") if team_b_code else []
+    team_a_players = Contract.objects.filter(team=team_a) if team_a else []
+    team_b_players = Contract.objects.filter(team=team_b) if team_b else []
 
-    # Get team objects (name + code)
-    team_a = TEAMS.get(team_a_code)
-    team_b = TEAMS.get(team_b_code)
+    team_a_picks = DraftPick.objects.filter(owning_team=team_a).order_by("year", "rnd") if team_a else []
+    team_b_picks = DraftPick.objects.filter(owning_team=team_b).order_by("year", "rnd") if team_b else []
+
+    team_a_retained = RetainedSalary.objects.filter(team=team_a).order_by("season") if team_a else []
+    team_b_retained = RetainedSalary.objects.filter(team=team_b).order_by("season") if team_b else []
 
     return render(request, "index.html", {
         "teams": TEAMS.values(),
@@ -63,4 +59,9 @@ def index(request):
         "team_b": team_b,
         "team_a_players": team_a_players,
         "team_b_players": team_b_players,
+        "team_a_picks": team_a_picks,
+        "team_b_picks": team_b_picks,
+        "team_a_retained": team_a_retained,
+        "team_b_retained": team_b_retained,
     })
+

@@ -8,6 +8,19 @@ A Django + Tailwind web app for validating NHL trades based on salary cap, roste
 - **Data Models** — Teams, Contracts, Draft Picks, and Retained Salaries.  
 - **CSV Data Loaders** — Easily import NHL roster and contract information.  
 - **Responsive UI** — Built with Tailwind CSS for clean and fast styling.  
+- **Interactive Frontend** — Select teams, choose assets, and validate trades live — all without page reloads.
+- **Smart Autocomplete** — Clean input for team selection with suggestion dropdowns.
+- **Detailed Results** — Error messages returned from backend when trades are invalid.
+
+---
+
+## 🧪 Testing
+
+To confirm the trade validator is working:
+
+- Try submitting a trade with no players/picks selected — it should return an error.
+- Try selecting the same team on both sides — the frontend will prevent it.
+- All validation happens via a POST request to `/validate/`, returning JSON responses.
 
 ---
 
@@ -72,3 +85,5 @@ TeamTrader/
 - **Frontend** — Tailwind CSS  
 - **Database** — SQLite (default, easily swappable)  
 - **Other Tools** — Python, Django ORM  
+
+

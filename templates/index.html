@@ -1,369 +1,274 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>NHL Trade Validation</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
-    <style>
-      .tt-card {
-        background: #1f2937;
-        padding: 1.25rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-      }
-      .tt-auto {
-        position: relative;
-        max-width: 28rem;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .tt-input {
-        width: 100%;
-        padding: 0.625rem 0.75rem;
-        font-size: 1rem;
-        background: #374151;
-        color: #fff;
-        border: 1px solid #4b5563;
-        border-radius: 0.5rem;
-        outline: none;
-      }
-      .tt-input::placeholder {
-        color: #9ca3af;
-      }
-      .tt-input.open {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-      }
-      .tt-list {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        z-index: 50;
-        background: #374151;
-        color: #fff;
-        border: 1px solid #4b5563;
-        border-top: 0;
-        max-height: 20rem;
-        overflow: auto;
-        display: none;
-        border-bottom-left-radius: 0.5rem;
-        border-bottom-right-radius: 0.5rem;
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
-      }
-      .tt-list.show {
-        display: block;
-      }
-      .tt-item {
-        padding: 0.6rem 0.85rem;
-        border-bottom: 1px solid rgba(75, 85, 99, 0.6);
-        cursor: pointer;
-      }
-      .tt-item:last-child {
-        border-bottom: none;
-      }
-      .tt-item:hover {
-        background: rgba(75, 85, 99, 0.35);
-      }
-      .tt-btn {
-        display: inline-block;
-        padding: 0.8rem 1.2rem;
-        font-weight: 600;
-        font-size: 1.05rem;
-        background: #374151;
-        color: #fff;
-        border: 1px solid #4b5563;
-        border-radius: 0.5rem;
-        transition: background 0.15s ease, transform 0.05s ease;
-      }
-      .tt-btn:hover {
-        background: #3f4757;
-      }
-      .tt-btn:active {
-        transform: translateY(1px);
-      }
-    </style>
-  </head>
-  <body class="bg-gray-900 text-white min-h-screen overflow-y-auto font-sans relative">
-    <div id="mammoth-trade-validator" data-version="Utah-2025" class="hidden"></div>
-    <div id="trade-uuid" data-key="mammoth-secret" class="hidden"></div>
+<head>
+  <meta charset="UTF-8" />
+  <title>TeamTrader - NHL Trade Validation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+  <style>
+    .tt-card { background: #1f2937; padding: 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); }
+    .tt-auto { position: relative; max-width: 28rem; margin-left: auto; margin-right: auto; }
+    .tt-input { width: 100%; padding: 0.625rem 0.75rem; font-size: 1rem; background: #374151; color: #fff; border: 1px solid #4b5563; border-radius: 0.5rem; outline: none; }
+    .tt-input::placeholder { color: #9ca3af; }
+    .tt-input.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .tt-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: #374151; color: #fff; border: 1px solid #4b5563; border-top: 0; max-height: 20rem; overflow: auto; display: none; border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35); }
+    .tt-list.show { display: block; }
+    .tt-item { padding: 0.6rem 0.85rem; border-bottom: 1px solid rgba(75, 85, 99, 0.6); cursor: pointer; }
+    .tt-item:last-child { border-bottom: none; }
+    .tt-item:hover { background: rgba(75, 85, 99, 0.35); }
+    .tt-btn { display: inline-block; padding: 0.8rem 1.2rem; font-weight: 600; font-size: 1.05rem; background: #374151; color: #fff; border: 1px solid #4b5563; border-radius: 0.5rem; transition: background 0.15s ease, transform 0.05s ease; }
+    .tt-btn:hover { background: #3f4757; }
+    .tt-btn:active { transform: translateY(1px); }
 
-    <div class="max-w-5xl mx-auto p-8">
-      <header class="text-center mb-10">
-        <h1 class="text-6xl font-bold">TeamTrader</h1>
-        <p class="text-2xl text-gray-400 mt-3">NHL Trade Validation</p>
-      </header>
+    /* Internal scrollers with fixed height */
+    .tt-roster-scroll {
+      height: 26rem;
+      overflow-y: auto;
+      border: 1px solid #4b5563;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      background: #374151;
+      margin-top: 0.75rem;  /* gap below selector */
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen font-sans">
+  <form id="csrf-form">{% csrf_token %}</form>
 
-      <div class="max-w-4xl mx-auto space-y-6">
-        <div class="grid grid-cols-2 gap-6">
-          <section class="tt-card">
-            <h2 class="text-xl font-semibold mb-4">Team A</h2>
-            <div class="tt-auto">
-              <input id="team-a-input" type="text" autocomplete="off" spellcheck="false"
-                     placeholder="Select team" class="tt-input"
-                     aria-autocomplete="list" aria-expanded="false"
-                     aria-controls="team-a-suggestions" role="combobox" />
-              <ul id="team-a-suggestions" role="listbox" class="tt-list"></ul>
-            </div>
-          </section>
+  <div class="max-w-5xl mx-auto p-8 pb-24">
+    <header class="text-center mb-8">
+      <h1 class="text-6xl font-bold">TeamTrader</h1>
+      <p class="text-2xl text-gray-400 mt-3">NHL Trade Validation</p>
+    </header>
 
-          <section class="tt-card">
-            <h2 class="text-xl font-semibold mb-4">Team B</h2>
-            <div class="tt-auto">
-              <input id="team-b-input" type="text" autocomplete="off" spellcheck="false"
-                     placeholder="Select team" class="tt-input"
-                     aria-autocomplete="list" aria-expanded="false"
-                     aria-controls="team-b-suggestions" role="combobox" />
-              <ul id="team-b-suggestions" role="listbox" class="tt-list"></ul>
-            </div>
-          </section>
-        </div>
+    <!-- Cards container with consistent spacing -->
+    <div class="space-y-6">
 
-        <section class="tt-card">
-          <button id="validate-btn" class="tt-btn">Validate Trade</button>
-          <h3 class="text-lg font-semibold mt-4 mb-3">Validation Results</h3>
-          <div id="results-body" class="space-y-2 text-gray-200"></div>
+      <!-- Team selectors row -->
+      <div class="grid grid-cols-2 gap-6">
+        <section class="tt-card space-y-2">
+          <h2 class="text-xl font-semibold">Team A</h2>
+
+          <div class="tt-auto">
+            <input id="team-a-input" type="text" autocomplete="off" spellcheck="false" placeholder="Select team" class="tt-input" />
+            <ul id="team-a-suggestions" class="tt-list"></ul>
+          </div>
+
+          <div id="team-a-roster" class="tt-roster-scroll">
+            <p class="text-gray-300">Select a team to load roster…</p>
+          </div>
         </section>
 
-        {% if team_a or team_b %}
-            <div class="mt-8 grid grid-cols-2 gap-8">
+        <section class="tt-card space-y-2">
+          <h2 class="text-xl font-semibold">Team B</h2>
 
-                {% if team_a %}
-                <div>
-                <h3 class="text-white text-xl font-semibold mb-2">{{ team_a.name }} Roster</h3>
-                <ul class="text-white text-sm">
-                    {% for player in team_a_players %}
-                    <li>{{ player.full_name }} ({{ player.position }}) – ${{ player.cap_hit|default:"0"|floatformat:0 }}</li>
-                    {% empty %}
-                    <li>No players found</li>
-                    {% endfor %}
-                </ul>
+          <div class="tt-auto">
+            <input id="team-b-input" type="text" autocomplete="off" spellcheck="false" placeholder="Select team" class="tt-input" />
+            <ul id="team-b-suggestions" class="tt-list"></ul>
+          </div>
 
-                <h4 class="text-white mt-4 font-semibold">Draft Picks</h4>
-                <ul class="text-white text-sm">
-                    {% for pick in team_a_picks %}
-                    <li>{{ pick.year }} Round {{ pick.rnd }}</li>
-                    {% empty %}
-                    <li>No picks</li>
-                    {% endfor %}
-                </ul>
-
-                <h4 class="text-white mt-4 font-semibold">Retained Salaries</h4>
-                <ul class="text-white text-sm">
-                    {% for rs in team_a_retained %}
-                    <li>{{ rs.player_name }} ({{ rs.season }})</li>
-                    {% empty %}
-                    <li>None</li>
-                    {% endfor %}
-                </ul>
-                </div>
-                {% endif %}
-
-                {% if team_b %}
-                <div>
-                <h3 class="text-white text-xl font-semibold mb-2">{{ team_b.name }} Roster</h3>
-                <ul class="text-white text-sm">
-                    {% for player in team_b_players %}
-                    <li>{{ player.full_name }} ({{ player.position }}) – ${{ player.cap_hit|default:"0"|floatformat:0 }}</li>
-                    {% empty %}
-                    <li>No players found</li>
-                    {% endfor %}
-                </ul>
-
-                <h4 class="text-white mt-4 font-semibold">Draft Picks</h4>
-                <ul class="text-white text-sm">
-                    {% for pick in team_b_picks %}
-                    <li>{{ pick.year }} Round {{ pick.rnd }}</li>
-                    {% empty %}
-                    <li>No picks</li>
-                    {% endfor %}
-                </ul>
-
-                <h4 class="text-white mt-4 font-semibold">Retained Salaries</h4>
-                <ul class="text-white text-sm">
-                    {% for rs in team_b_retained %}
-                    <li>{{ rs.player_name }} ({{ rs.season }})</li>
-                    {% empty %}
-                    <li>None</li>
-                    {% endfor %}
-                </ul>
-                </div>
-                {% endif %}
-
-            </div>
-        {% endif %}
-
-
-        {% if team_code %}
-        <section class="tt-card">
-          <h2 class="text-xl font-semibold mb-4">{{ team_code }} Roster</h2>
-
-          <h3 class="text-lg font-medium mb-2">Players</h3>
-          <ul class="list-disc pl-5 space-y-1">
-            {% for player in players %}
-              <li>
-                {{ player.full_name }} — {{ player.position }} —
-                ${{ player.cap_hit|floatformat:0 }} cap hit —
-                {{ player.years_remaining|default:"?" }} years left
-              </li>
-            {% empty %}
-              <li>No players found.</li>
-            {% endfor %}
-          </ul>
-
-          <h3 class="text-lg font-medium mt-4 mb-2">Draft Picks</h3>
-          <ul class="list-disc pl-5 space-y-1">
-            {% for pick in draft_picks %}
-              <li>{{ pick.year }} Round {{ pick.rnd }}</li>
-            {% empty %}
-              <li>No draft picks found.</li>
-            {% endfor %}
-          </ul>
+          <div id="team-b-roster" class="tt-roster-scroll">
+            <p class="text-gray-300">Select a team to load roster…</p>
+          </div>
         </section>
-        {% endif %}
       </div>
+
+      <!-- Validate card -->
+      <section class="tt-card space-y-4">
+        <button id="validate-btn" class="tt-btn" type="button">Validate Trade</button>
+        <h3 id="results-title" class="text-lg font-semibold hidden">Validation Results</h3>
+        <div id="results-body" class="space-y-2 text-gray-200 hidden"></div>
+      </section>
     </div>
+  </div>
 
-    <footer class="absolute bottom-4 right-4 text-sm text-gray-400 text-right">
-      <div>Built by <span class="text-gray-200">Henry Nguyen</span></div>
-      <a href="https://github.com/nothenrynguyen/TeamTrader" target="_blank" rel="noopener noreferrer"
-         class="underline hover:text-gray-300">github.com/nothenrynguyen/TeamTrader</a>
-    </footer>
+  <!-- Footer -->
+  <footer class="fixed bottom-0 w-full text-sm text-gray-400 p-4 text-center leading-tight">
+    built by <span class="text-gray-200">Henry Nguyen</span><br>
+    <a href="https://github.com/nothenrynguyen/TeamTrader" target="_blank" class="underline hover:text-gray-300">
+      github.com/nothenrynguyen/TeamTrader
+    </a>
+  </footer>
 
-    <script>
-      const TEAMS = [
-        { code: "ANA", name: "Anaheim Ducks" }, { code: "ARI", name: "Arizona Coyotes" },
-        { code: "BOS", name: "Boston Bruins" }, { code: "BUF", name: "Buffalo Sabres" },
-        { code: "CGY", name: "Calgary Flames" }, { code: "CAR", name: "Carolina Hurricanes" },
-        { code: "CHI", name: "Chicago Blackhawks" }, { code: "COL", name: "Colorado Avalanche" },
-        { code: "CBJ", name: "Columbus Blue Jackets" }, { code: "DAL", name: "Dallas Stars" },
-        { code: "DET", name: "Detroit Red Wings" }, { code: "EDM", name: "Edmonton Oilers" },
-        { code: "FLA", name: "Florida Panthers" }, { code: "LAK", name: "Los Angeles Kings" },
-        { code: "MIN", name: "Minnesota Wild" }, { code: "MTL", name: "Montréal Canadiens" },
-        { code: "NSH", name: "Nashville Predators" }, { code: "NJD", name: "New Jersey Devils" },
-        { code: "NYI", name: "New York Islanders" }, { code: "NYR", name: "New York Rangers" },
-        { code: "OTT", name: "Ottawa Senators" }, { code: "PHI", name: "Philadelphia Flyers" },
-        { code: "PIT", name: "Pittsburgh Penguins" }, { code: "SJS", name: "San Jose Sharks" },
-        { code: "SEA", name: "Seattle Kraken" }, { code: "STL", name: "St. Louis Blues" },
-        { code: "TBL", name: "Tampa Bay Lightning" }, { code: "TOR", name: "Toronto Maple Leafs" },
-        { code: "VAN", name: "Vancouver Canucks" }, { code: "VGK", name: "Vegas Golden Knights" },
-        { code: "WSH", name: "Washington Capitals" }, { code: "WPG", name: "Winnipeg Jets" }
+  <script>
+    const TEAMS = [
+      { code: "ANA", name: "Anaheim Ducks" }, { code: "ARI", name: "Arizona Coyotes" },
+      { code: "BOS", name: "Boston Bruins" }, { code: "BUF", name: "Buffalo Sabres" },
+      { code: "CGY", name: "Calgary Flames" }, { code: "CAR", name: "Carolina Hurricanes" },
+      { code: "CHI", name: "Chicago Blackhawks" }, { code: "COL", name: "Colorado Avalanche" },
+      { code: "CBJ", name: "Columbus Blue Jackets" }, { code: "DAL", name: "Dallas Stars" },
+      { code: "DET", name: "Detroit Red Wings" }, { code: "EDM", name: "Edmonton Oilers" },
+      { code: "FLA", name: "Florida Panthers" }, { code: "LAK", name: "Los Angeles Kings" },
+      { code: "MIN", name: "Minnesota Wild" }, { code: "MTL", name: "Montréal Canadiens" },
+      { code: "NSH", name: "Nashville Predators" }, { code: "NJD", name: "New Jersey Devils" },
+      { code: "NYI", name: "New York Islanders" }, { code: "NYR", name: "New York Rangers" },
+      { code: "OTT", name: "Ottawa Senators" }, { code: "PHI", name: "Philadelphia Flyers" },
+      { code: "PIT", name: "Pittsburgh Penguins" }, { code: "SJS", name: "San Jose Sharks" },
+      { code: "SEA", name: "Seattle Kraken" }, { code: "STL", name: "St. Louis Blues" },
+      { code: "TBL", name: "Tampa Bay Lightning" }, { code: "TOR", name: "Toronto Maple Leafs" },
+      { code: "VAN", name: "Vancouver Canucks" }, { code: "VGK", name: "Vegas Golden Knights" },
+      { code: "WSH", name: "Washington Capitals" }, { code: "WPG", name: "Winnipeg Jets" }
+    ];
+
+    function makeAutocomplete(inputId, listId, side) {
+      const input = document.getElementById(inputId);
+      const list = document.getElementById(listId);
+      input.dataset.code = "";
+
+      function showList() { list.classList.add("show"); input.classList.add("open"); }
+      function hideList() { list.classList.remove("show"); input.classList.remove("open"); }
+
+      function renderOptions(query) {
+        const filtered = TEAMS.filter(t =>
+          t.name.toLowerCase().includes(query.toLowerCase()) ||
+          t.code.toLowerCase().includes(query.toLowerCase())
+        );
+        list.innerHTML = "";
+        filtered.forEach(t => {
+          const li = document.createElement("li");
+          li.className = "tt-item";
+          li.textContent = `${t.name} (${t.code})`;
+          li.onclick = () => {
+            input.value = t.name;
+            input.dataset.code = t.code;
+            hideList();
+            loadRosterFor(side, t.code);    // load this side immediately
+          };
+          list.appendChild(li);
+        });
+        if (filtered.length) showList(); else hideList();
+      }
+
+      input.addEventListener("input", () => renderOptions(input.value.trim()));
+      input.addEventListener("focus", () => renderOptions(""));
+      input.addEventListener("keydown", e => { if (e.key === "Escape") hideList(); });
+      document.addEventListener("click", e => { if (!list.contains(e.target) && e.target !== input) hideList(); });
+    }
+
+    makeAutocomplete("team-a-input", "team-a-suggestions", "team-a");
+    makeAutocomplete("team-b-input", "team-b-suggestions", "team-b");
+
+    function getCSRFToken() {
+      const cookie = document.cookie.split("; ").find(row => row.startsWith("csrftoken="));
+      return cookie ? cookie.split("=")[1] : "";
+    }
+
+    function createAssetCheckbox(name, id, label) {
+      const wrapper = document.createElement("label");
+      wrapper.className = "block";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.name = name;
+      cb.value = id;
+      cb.className = "mr-2";
+      wrapper.appendChild(cb);
+      wrapper.appendChild(document.createTextNode(label));
+      return wrapper;
+    }
+
+    function renderRosterInto(teamSide, data) {
+      const containerId = teamSide === "team-a" ? "team-a-roster" : "team-b-roster";
+      const root = document.getElementById(containerId);
+      root.innerHTML = "";
+
+      const title = document.createElement("h3");
+      title.className = "text-lg font-semibold mb-2";
+      title.textContent = `${data.name} Roster`;
+      root.appendChild(title);
+
+      const sections = [
+        { title: "Players", items: data.players, formId: `${teamSide}-players`, name: "players" },
+        { title: "Draft Picks", items: data.picks, formId: `${teamSide}-picks`, name: "picks" },
+        { title: "Retained Salaries", items: data.retained, formId: `${teamSide}-retained`, name: "retained" }
       ];
 
-      function makeAutocomplete(inputId, listId) {
-        const input = document.getElementById(inputId);
-        const list = document.getElementById(listId);
-        input.dataset.code = "";
+      sections.forEach(sec => {
+        const secTitle = document.createElement("h4");
+        secTitle.className = "text-white font-semibold mt-3";
+        secTitle.textContent = sec.title;
+        root.appendChild(secTitle);
 
-        const show = () => {
-          list.classList.add("show");
-          input.classList.add("open");
-          input.setAttribute("aria-expanded", "true");
-        };
-        const hide = () => {
-          list.classList.remove("show");
-          input.classList.remove("open");
-          input.setAttribute("aria-expanded", "false");
-        };
+        const form = document.createElement("form");
+        form.id = sec.formId;
+        form.className = "space-y-2 mt-1";
 
-        function render(items) {
-          list.innerHTML = "";
-          if (!items.length) return hide();
-          items.forEach((t) => {
-            const li = document.createElement("li");
-            li.className = "tt-item";
-            li.textContent = `${t.name} (${t.code})`;
-            li.addEventListener("click", () => {
-              input.value = t.name;
-              input.dataset.code = t.code;
-              hide();
-            });
-            list.appendChild(li);
-          });
-          show();
-        }
-
-        function filter(q) {
-          const s = q.trim().toLowerCase();
-          if (!s) return TEAMS;
-          return TEAMS.filter((t) => t.name.toLowerCase().includes(s) || t.code.toLowerCase().includes(s));
-        }
-
-        input.addEventListener("focus", () => render(TEAMS));
-        input.addEventListener("input", () => {
-          const v = input.value.trim();
-          if (!v) {
-            input.placeholder = "Select team";
-            input.dataset.code = "";
-            hide();
-            return;
-          }
-          render(filter(v));
+        (sec.items || []).forEach(item => {
+          let label = "";
+          if (sec.name === "players") label = `${item.full_name} (${item.position})`;
+          else if (sec.name === "picks") label = `${item.year} Round ${item.rnd}`;
+          else label = `${item.player_name} (${item.season})`;
+          form.appendChild(createAssetCheckbox(sec.name, item.id, label));
         });
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Escape") hide();
-          if (e.key === "Enter") {
-            const first = list.querySelector(".tt-item");
-            if (first) {
-              first.click();
-              e.preventDefault();
-            }
-          }
-        });
-        document.addEventListener("click", (e) => {
-          if (!list.contains(e.target) && e.target !== input) hide();
-        });
-      }
 
-      makeAutocomplete("team-a-input", "team-a-suggestions");
-      makeAutocomplete("team-b-input", "team-b-suggestions");
-
-      document.getElementById("validate-btn").addEventListener("click", () => {
-        const aEl = document.getElementById("team-a-input");
-        const bEl = document.getElementById("team-b-input");
-        const a = { code: aEl.dataset.code || "", name: aEl.value.trim() };
-        const b = { code: bEl.dataset.code || "", name: bEl.value.trim() };
-
-        const body = document.getElementById("results-body");
-        body.innerHTML = "";
-
-        const issues = [];
-        if (!a.code) issues.push("Please choose a valid Team A from suggestions.");
-        if (!b.code) issues.push("Please choose a valid Team B from suggestions.");
-        if (a.code && b.code && a.code === b.code) issues.push("Teams must be different.");
-
-        if (issues.length) {
-          body.appendChild(msg("Issues found:", "text-red-300"));
-          const ul = document.createElement("ul");
-          ul.className = "list-disc pl-6 space-y-1";
-          issues.forEach((t) => {
-            const li = document.createElement("li");
-            li.textContent = t;
-            ul.appendChild(li);
-          });
-          body.appendChild(ul);
-          return;
-        }
-
-        body.appendChild(msg(`Ready to validate trade between ${a.name} (${a.code}) and ${b.name} (${b.code}).`, "text-green-300"));
-        body.appendChild(divider());
-        body.appendChild(msg("Next: connect to a Django endpoint to load rosters/cap data and run Mammoth rules.", "text-sm text-gray-400"));
+        root.appendChild(form);
       });
+    }
 
-      function msg(text, cls) {
-        const p = document.createElement("p");
-        p.className = cls || "";
-        p.textContent = text;
-        return p;
+    async function loadRosterFor(side, code) {
+      const box = document.getElementById(side === "team-a" ? "team-a-roster" : "team-b-roster");
+      const otherSide = side === "team-a" ? "team-b" : "team-a";
+      const otherCode = document.getElementById(otherSide + "-input").dataset.code || "";
+
+      box.innerHTML = '<p class="text-gray-300">Loading roster…</p>';
+
+      try {
+        const res = await fetch(`/api/load_rosters/?team_a=${side === "team-a" ? code : otherCode || code}&team_b=${side === "team-b" ? code : otherCode || code}`);
+        const data = await res.json();
+        if (side === "team-a" && data?.team_a) renderRosterInto("team-a", data.team_a);
+        if (side === "team-b" && data?.team_b) renderRosterInto("team-b", data.team_b);
+      } catch (e) {
+        box.innerHTML = '<p class="text-red-300">Error loading roster.</p>';
+      }
+    }
+
+    document.getElementById("validate-btn").addEventListener("click", async () => {
+      const aCode = document.getElementById("team-a-input").dataset.code;
+      const bCode = document.getElementById("team-b-input").dataset.code;
+      const resultsTitle = document.getElementById("results-title");
+      const results = document.getElementById("results-body");
+
+      resultsTitle.classList.remove("hidden");
+      results.classList.remove("hidden");
+
+      if (!aCode || !bCode || aCode === bCode) {
+        results.innerHTML = '<p class="text-red-300 font-semibold">Please select two different teams before validating.</p>';
+        return;
       }
 
-      function divider() {
-        const d = document.createElement("div");
-        d.className = "border-t border-gray-700 my-3";
-        return d;
+      const getChecked = id =>
+        Array.from(document.querySelectorAll(`#${id} input:checked`)).map(cb => parseInt(cb.value));
+
+      const payload = {
+        team_a: aCode,
+        team_b: bCode,
+        team_a_players: getChecked("team-a-players"),
+        team_a_picks: getChecked("team-a-picks"),
+        team_a_retained: getChecked("team-a-retained"),
+        team_b_players: getChecked("team-b-players"),
+        team_b_picks: getChecked("team-b-picks"),
+        team_b_retained: getChecked("team-b-retained"),
+      };
+
+      results.innerHTML = '<p class="text-gray-300">Validating trade…</p>';
+
+      try {
+        const res = await fetch("/validate/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+        if (result.errors?.length) {
+          results.innerHTML = `<p class="text-red-300 font-bold">Errors:</p><ul class="list-disc pl-5">${result.errors.map(e => `<li>${e}</li>`).join("")}</ul>`;
+        } else {
+          results.innerHTML = `<p class="text-green-300 font-bold">Trade is valid!</p><p class="text-gray-200">${result.message || "Trade passed all checks."}</p>`;
+        }
+      } catch (e) {
+        results.innerHTML = `<p class="text-red-300 font-semibold">Validation failed. Please try again.</p>`;
       }
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
