@@ -1,0 +1,21 @@
+<h2>Players</h2>
+<ul>
+  {% for player in players %}
+    <li>
+      {{ player.full_name }} — {{ player.position }} —
+      ${{ player.cap_hit|floatformat:0 }} cap hit — 
+      {{ player.years_remaining|default:"?" }} years left
+    </li>
+  {% empty %}
+    <li>No players found.</li>
+  {% endfor %}
+</ul>
+
+<h2>Draft Picks</h2>
+<ul>
+  {% for pick in draft_picks %}
+    <li>{{ pick.year }} Round {{ pick.rnd }}</li>
+  {% empty %}
+    <li>No draft picks found.</li>
+  {% endfor %}
+</ul>
