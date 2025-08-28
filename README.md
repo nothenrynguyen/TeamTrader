@@ -83,7 +83,7 @@ TeamTrader/
 ## 🛠 Tech Stack  
 - **Backend** — Django  
 - **Frontend** — Tailwind CSS  
-- **Database** — SQLite (default, easily swappable)  
+- **Database** — SQLite 
 - **Other Tools** — Python, Django ORM  
 
 
