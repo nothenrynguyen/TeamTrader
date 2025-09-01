@@ -5,3 +5,13 @@ db.sqlite3
 node_modules/
 static/css/output.css
 .vscode/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+node_modules/
+staticfiles/
+coverage.xml
+htmlcov/
+.coverage*
